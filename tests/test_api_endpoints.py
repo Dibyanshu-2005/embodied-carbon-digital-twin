@@ -116,11 +116,14 @@ class TestApiEndpoints(unittest.TestCase):
         res_init = self.client.get("/api/project")
         init_data = res_init.json()
         last_stage = init_data["timeline"]["stages"][-1]
-        last_date = last_stage["date"] # e.g. 2025-06-15
+        last_date_str = last_stage["date"]
+        import datetime
+        last_date = datetime.date.fromisoformat(last_date_str)
+        new_date = last_date + datetime.timedelta(days=30)
 
         payload = {
-            "name": "Month 6 Log: Site Completion",
-            "date": "2025-07-20", # 35 days after 2025-06-15
+            "name": "Next Milestone: Site Completion",
+            "date": new_date.isoformat(),
             "volume_m3": 45.0,
             "status": "Completed"
         }
@@ -128,12 +131,12 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["success"])
-        self.assertEqual(data["stage"]["duration_days"], 35)
+        self.assertEqual(data["stage"]["duration_days"], 30)
         # Verify the timeline in project state updated continuously
         new_stages = data["project_state"]["timeline"]["stages"]
         added_stage = new_stages[-1]
-        self.assertEqual(added_stage["stage_name"], "Month 6 Log: Site Completion")
-        self.assertEqual(added_stage["duration_days"], 35)
+        self.assertEqual(added_stage["stage_name"], "Next Milestone: Site Completion")
+        self.assertEqual(added_stage["duration_days"], 30)
 
     def test_add_and_delete_material_api(self):
         # 1. Add Material from Central Repository

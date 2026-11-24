@@ -1,7 +1,4 @@
 material_name,vehicle_type,quantity_transported,unit,distance_km,round_trip,transport_ef,ef_source
-Cement (OPC 53 Grade),Heavy Tipper Truck (16-32t),134.0,tonnes,175.0,False,0.105,DEFRA / Indian Ministry of Road Transport freight factor
-Fly Ash (Class F),Heavy Tipper Truck (16-32t),30.0,tonnes,95.0,False,0.105,DEFRA / Indian Ministry of Road Transport freight factor
-Crushed Basalt Aggregates (20mm + 10mm),Heavy Tipper Truck (16-32t),435.0,tonnes,42.0,False,0.105,DEFRA / Indian Ministry of Road Transport freight factor
-Manufactured M-Sand,Heavy Tipper Truck (16-32t),250.0,tonnes,52.0,False,0.105,DEFRA / Indian Ministry of Road Transport freight factor
-TMT Rebar Fe 500D,Heavy Tipper Truck (16-32t),40.0,tonnes,36.0,False,0.105,DEFRA / Indian Ministry of Road Transport freight factor
-Ready-Mix Wet Concrete (Transit Agitation),Ready-Mix Transit Mixer (Diesel),985.0,tonnes,14.0,True,0.22,Indian RMCMA Transit Mixer Standard (Agitating Drum)
+Ready Mix Concrete (M30),Heavy Duty Vehicle,0.0,m3,0.0,False,0.0,GKSPL; actual trip data unavailable
+Reinforcement Steel,Heavy Duty Vehicle,0.0,kg,0.0,False,0.0,GKSPL; actual trip data unavailable
+Solid Concrete Blocks,Medium Duty Vehicle,0.0,m3,0.0,False,0.0,GKSPL; actual trip data unavailable

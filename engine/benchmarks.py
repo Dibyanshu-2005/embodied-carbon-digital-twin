@@ -30,6 +30,13 @@ REFERENCE_BENCHMARKS = {
         "source": "GRIHA v2019 Criterion 19 & Indian Ready Mixed Concrete Assoc (RMCMA)",
         "region": "India",
         "description": "Recommended green concrete practice in India achieving ~36% carbon reduction through SCM (Fly Ash / GGBS) substitution."
+    },
+    "mahindra_eden_gkspl": {
+        "name": "Mahindra Eden Real Study (GKSPL)",
+        "intensity_kg_per_m3": 273.68,
+        "source": "GKSPL Whole Life Carbon Study / Mahindra Eden",
+        "region": "India (Bengaluru)",
+        "description": "Real-world observed baseline intensity for M30 ready mix concrete."
     }
 }
 

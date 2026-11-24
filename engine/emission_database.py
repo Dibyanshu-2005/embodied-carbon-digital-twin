@@ -49,10 +49,88 @@ SOURCES_INDEX: Dict[int, Dict[str, Any]] = {
         "title": "MoRTH Freight Baseline & DEFRA Transport Factors",
         "organization": "Ministry of Road Transport and Highways (India) / DEFRA",
         "description": "Heavy commercial tipper haulage (0.105 kgCO2e/t·km) and agitating transit mixer haulage."
+    },
+    7: {
+        "id": 7,
+        "code": "[7]",
+        "title": "GKSPL Whole Life Carbon Study (Mahindra Eden)",
+        "organization": "GKSPL / Mahindra Lifespaces",
+        "description": "Whole life embodied carbon study and BOQ baseline for high-rise residential construction in Bengaluru, India."
     }
 }
 
 MATERIALS_DATABASE: List[Dict[str, Any]] = [
+    # 0. GKSPL Real-World Study Items (Mahindra Eden)
+    {
+        "id": "mat-gkspl-m30",
+        "name": "Ready Mix Concrete (M30)",
+        "category": "Concrete",
+        "unit": "m3",
+        "emission_factor": 273.683,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "M30 design mix ready mix concrete from Mahindra Eden baseline study"
+    },
+    {
+        "id": "mat-gkspl-rebar",
+        "name": "Reinforcement Steel (GKSPL)",
+        "category": "Steel",
+        "unit": "kg",
+        "emission_factor": 2.397,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "Primary reinforcement rebar steel from GKSPL baseline"
+    },
+    {
+        "id": "mat-gkspl-block",
+        "name": "Solid Concrete Blocks (GKSPL)",
+        "category": "Masonry",
+        "unit": "m3",
+        "emission_factor": 188.450,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "Precast solid concrete masonry blocks from GKSPL baseline"
+    },
+    {
+        "id": "mat-gkspl-opc",
+        "name": "OPC Cement (GKSPL)",
+        "category": "Cement",
+        "unit": "kg",
+        "emission_factor": 0.996,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "OPC cement baseline factor from GKSPL study"
+    },
+    {
+        "id": "mat-gkspl-msand",
+        "name": "M-Sand (GKSPL)",
+        "category": "Aggregates",
+        "unit": "kg",
+        "emission_factor": 0.0071,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "Manufactured sand fine aggregate from GKSPL study"
+    },
+    {
+        "id": "mat-gkspl-coarse",
+        "name": "Coarse Aggregates (GKSPL)",
+        "category": "Aggregates",
+        "unit": "kg",
+        "emission_factor": 0.0058,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "Crushed coarse aggregate stone from GKSPL study"
+    },
+    {
+        "id": "mat-gkspl-plaster",
+        "name": "Plastering Mortar (GKSPL)",
+        "category": "Finishing",
+        "unit": "m3",
+        "emission_factor": 0.996,
+        "source_id": 7,
+        "source_code": "[7]",
+        "description": "Plastering cement proxy factor from GKSPL study"
+    },
     # 1. Cements & Pozzolanic Binders
     {
         "id": "mat-opc-53",

@@ -31,12 +31,14 @@ class ConcreteDigitalTwin:
     def load_state(self, data: Dict[str, Any], snapshot_label: str = "State Updated"):
         """Load full project state and recalculate all twin metrics."""
         self.project_meta = copy.deepcopy(data.get("project_meta", {
-            "project_name": "Concrete Construction Package (Demo Activity)",
-            "concrete_volume_m3": 420.0,
+            "project_name": "Mahindra Eden - Whole Life Carbon Study",
+            "contractor": "Mahindra Lifespaces / GKSPL",
+            "location": "Bengaluru, Karnataka, India",
+            "concrete_volume_m3": 55480.98,
             "concrete_grade": "M30 Design Mix",
-            "carbon_budget_tonnes": 115.0,
-            "start_date": "2025-01-10",
-            "end_date": "2025-06-30"
+            "carbon_budget_tonnes": 31311.61,
+            "start_date": "2023-01-01",
+            "end_date": "2025-05-31"
         }))
         self.materials = copy.deepcopy(data.get("materials", []))
         self.transport = copy.deepcopy(data.get("transport", []))
@@ -503,11 +505,15 @@ class ConcreteDigitalTwin:
             scm_ef = 0.015 if scm_type == "fly_ash" else 0.090  # GGBS
 
             for mat in sim_materials:
-                if "opc" in mat.get("material_name", "").lower() or "cement" in mat.get("material_name", "").lower():
+                m_name = mat.get("material_name", "").lower()
+                if "opc" in m_name or "cement" in m_name or "concrete" in m_name:
                     orig_qty = safe_float(mat.get("consumed_quantity", 0.0))
                     orig_ef = safe_float(mat.get("emission_factor", 0.89))
-                    # Blended emission factor
-                    blended_ef = (orig_ef * (1.0 - replacement_pct)) + (scm_ef * replacement_pct)
+                    # If ready mix concrete (m3 with high EF), SCM substitution reduces mix intensity
+                    if "concrete" in m_name and orig_ef > 10.0:
+                        blended_ef = orig_ef * (1.0 - (replacement_pct * 0.35))
+                    else:
+                        blended_ef = (orig_ef * (1.0 - replacement_pct)) + (scm_ef * replacement_pct)
                     mat["emission_factor"] = round(blended_ef, 4)
                     mat["material_name"] = f"{mat['material_name']} ({int(replacement_pct*100)}% {scm_type.upper()} Blend)"
 
@@ -568,15 +574,15 @@ class ConcreteDigitalTwin:
         if not stages:
             # Fallback default 5-stage concrete sequence
             stages = [
-                {"stage_id": 1, "name": "Substructure Footings & Raft", "date": "2025-01-20", "volume_m3": 110.0, "status": "Completed"},
-                {"stage_id": 2, "name": "Plinth Beams & Columns to GF", "date": "2025-02-15", "volume_m3": 75.0, "status": "Completed"},
-                {"stage_id": 3, "name": "First Floor Slab & Beams", "date": "2025-03-25", "volume_m3": 95.0, "status": "Completed"},
-                {"stage_id": 4, "name": "Second Floor Columns & Slab", "date": "2025-04-30", "volume_m3": 85.0, "status": "In Progress"},
-                {"stage_id": 5, "name": "Terrace Roof Slab & Parapet", "date": "2025-06-15", "volume_m3": 55.0, "status": "Scheduled"}
+                {"stage_id": 1, "name": "Foundation", "date": "2023-01-01", "volume_m3": 14000.0, "status": "Completed"},
+                {"stage_id": 2, "name": "Substructure", "date": "2023-02-01", "volume_m3": 11000.0, "status": "Completed"},
+                {"stage_id": 3, "name": "Superstructure", "date": "2023-03-01", "volume_m3": 25000.0, "status": "Completed"},
+                {"stage_id": 4, "name": "Masonry", "date": "2023-04-01", "volume_m3": 3480.98, "status": "In Progress"},
+                {"stage_id": 5, "name": "Finishing", "date": "2023-05-01", "volume_m3": 2000.0, "status": "Scheduled"}
             ]
 
-        total_vol = safe_float(self.project_meta.get("concrete_volume_m3", 420.0))
-        budget_tonnes = safe_float(self.project_meta.get("carbon_budget_tonnes", 115.0))
+        total_vol = safe_float(self.project_meta.get("concrete_volume_m3", 55480.98))
+        budget_tonnes = safe_float(self.project_meta.get("carbon_budget_tonnes", 31311.61))
         planned_total_carbon_tonnes = budget_tonnes
 
         cum_actual_vol = 0.0

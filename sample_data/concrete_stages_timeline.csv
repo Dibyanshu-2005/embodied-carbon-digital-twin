@@ -1,6 +1,6 @@
 stage_id,name,date,volume_m3,status,description
-1,Substructure Footings & Basement Raft,2025-01-20,110.0,Completed,Foundation concrete pour log and rebar delivery challans
-2,Plinth Beams & Ground Floor Columns,2025-02-15,75.0,Completed,Plinth tie beams and ground column casting log
-3,First Floor Slab & Retaining Wall,2025-03-25,95.0,Completed,First floor slab pouring and concrete delivery verification
-4,Second Floor Columns & Transfer Slab,2025-04-30,85.0,In Progress,Second floor columns and core structural elements
-5,Terrace Roof Slab & Overhead Tank,2025-06-15,55.0,Scheduled,Terrace roof slab casting and final structural milestone
+1,Foundation,2023-01-01,14000.0,Completed,Construction stage; actual pour dates and quantities unavailable
+2,Substructure,2023-02-01,11000.0,Completed,Construction stage; actual pour dates and quantities unavailable
+3,Superstructure,2023-03-01,25000.0,Completed,Construction stage; actual pour dates and quantities unavailable
+4,Masonry,2023-04-01,3480.98,In Progress,Construction stage; actual quantities unavailable
+5,Finishing,2023-05-01,2000.0,Scheduled,Construction stage; actual quantities unavailable

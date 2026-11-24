@@ -1,0 +1,7 @@
+material_name,unit,emission_factor,ef_source
+OPC Cement,kg,0.996,GKSPL Whole Life Carbon Study
+M-Sand,kg,0.0071,GKSPL Whole Life Carbon Study
+Coarse Aggregates,kg,0.0058,GKSPL Whole Life Carbon Study
+Reinforcement Steel,kg,2.397,GKSPL Whole Life Carbon Study
+Solid Concrete Block,m3,188.45,GKSPL Whole Life Carbon Study
+M30 Concrete,m3,273.683,GKSPL Whole Life Carbon Study
