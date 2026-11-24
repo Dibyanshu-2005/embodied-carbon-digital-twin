@@ -49,6 +49,13 @@ async def serve_dashboard(request: Request):
     """Render the main interactive Digital Twin web dashboard."""
     return templates.TemplateResponse(request, "index.html")
 
+@app.get("/presentation", response_class=HTMLResponse)
+async def serve_presentation():
+    """Render the presentation slide deck."""
+    presentation_path = os.path.join(BASE_DIR, "presentation.html")
+    with open(presentation_path, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
 @app.get("/api/project")
 async def get_project_state():
     """Return the current comprehensive state of the Digital Twin."""

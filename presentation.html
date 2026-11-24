@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTP Presentation - Embodied Carbon Digital Twin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Presentation Slide Container (16:9 Aspect Ratio) */
+    .deck-container {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Individual Slide */
+    .slide {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      padding: 44px 56px;
+      background: #ffffff;
+    }
+    .slide.active {
+      display: flex;
+    }
+
+    /* Header Typography (Guidelines: 28-36pt bold sans-serif) */
+    .slide-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+    .slide-tag {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* 2-Column Balanced Layout (50% Text, 50% Graphic) */
+    .slide-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    /* Left Text Column (Guidelines: 18-24pt readable text) */
+    .text-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+    }
+    .lead-text {
+      font-size: 20px;
+      line-height: 1.5;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bullet-item {
+      font-size: 17px;
+      line-height: 1.5;
+      color: #334155;
+      position: relative;
+      padding-left: 24px;
+    }
+    .bullet-item::before {
+      content: "■";
+      position: absolute;
+      left: 0;
+      color: #2563eb;
+      font-size: 14px;
+      top: 1px;
+    }
+    .bullet-item strong {
+      color: #0f172a;
+    }
+
+    /* Highlight Key Concept Box */
+    .key-callout {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 15px;
+      color: #1e40af;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Right Graphic / Screenshot Placeholder Column */
+    .graphic-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .screenshot-placeholder {
+      width: 100%;
+      height: 100%;
+      background: #f8fafc;
+      border: 2px dashed #94a3b8;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .placeholder-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      color: #64748b;
+    }
+    .placeholder-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .placeholder-caption {
+      font-size: 13px;
+      color: #64748b;
+      max-width: 320px;
+    }
+    .screenshot-placeholder img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    /* Title Slide Special Style */
+    .title-slide {
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 80px;
+    }
+    .title-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+    .main-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.25;
+      margin-bottom: 18px;
+    }
+    .subtitle {
+      font-size: 21px;
+      color: #475569;
+      max-width: 760px;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+    .author-meta {
+      font-size: 16px;
+      color: #64748b;
+      font-weight: 600;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    /* Navigation Bar */
+    .controls-bar {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-nav {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-nav:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+    .slide-counter {
+      font-size: 14px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .controls-bar {
+        display: none;
+      }
+      .deck-container {
+        border: none;
+        box-shadow: none;
+        max-width: 100%;
+        aspect-ratio: auto;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slide Deck Container -->
+  <div class="deck-container">
+
+    <!-- SLIDE 1: TITLE SLIDE -->
+    <div class="slide title-slide active" data-slide="1">
+      <div class="title-badge">BTP Prototype & Research Project</div>
+      <h1 class="main-title">Digital Twin for Monitoring Embodied Carbon in Concrete Construction</h1>
+      <p class="subtitle">A live, interactive web system that tracks site carbon emissions in real time instead of post-construction estimates.</p>
+      <div class="author-meta">
+        <span>Civil & Structural Engineering</span>
+        <span>•</span>
+        <span>Real-Site Validation (Mahindra Eden Study)</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: THE PROBLEM & WHO IT HELPS -->
+    <div class="slide" data-slide="2">
+      <div class="slide-header">
+        <h2 class="slide-title">1. The Problem & Who It Helps</h2>
+        <span class="slide-tag">Context</span>
+      </div>
+      <div class="slide-content-grid">
+        <div class="text-column">
+          <p class="lead-text">Concrete generates up to 80% of upfront construction carbon, but emissions are currently audited months after work is done.</p>
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Who It Helps:</strong> Site engineers, project managers, and sustainability auditors on active jobsites.</li>
+            <li class="bullet-item"><strong>The Information Gap:</strong> Delivery challans and batching slips sit in physical files without real-time tracking.</li>
+            <li class="bullet-item"><strong>The Solution:</strong> Replace static retrospective reports with a live Digital Twin that tracks carbon as pours occur.</li>
+          </ul>
+          <div class="key-callout">
+            Goal: Catch carbon overruns during construction while decisions can still be made.
+          </div>
+        </div>
+        <div class="graphic-column">
+          <div class="screenshot-placeholder">
+            <div class="placeholder-icon">📊</div>
+            <div class="placeholder-title">Dashboard Overview Graphic</div>
+            <p class="placeholder-caption">Paste screenshot of the Top KPI Cards (Total Embodied Carbon, Concrete Volume, and Mix Intensity).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: HOW IT WORKS (THE CORE CONCEPTS) -->
+    <div class="slide" data-slide="3">
+      <div class="slide-header">
+        <h2 class="slide-title">2. How the Digital Twin Works</h2>
+        <span class="slide-tag">Architecture</span>
+      </div>
+      <div class="slide-content-grid">
+        <div class="text-column">
+          <p class="lead-text">The system maintains a synchronized digital mirror of the physical concrete structure through three pillars:</p>
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Rigorous Carbon Accounting:</strong> Multi-stage calculations covering materials (A1–A3), transport (A4), and equipment (A5).</li>
+            <li class="bullet-item"><strong>Continuous Progression:</strong> Tracks milestone pours from foundations to slabs without double-counting.</li>
+            <li class="bullet-item"><strong>Dynamic Recalculation:</strong> Instant recalculation upon new deliveries, with What-If scenario simulations.</li>
+          </ul>
+          <div class="key-callout">
+            Standard: Compliant with EN 15978 / ISO 21930 upfront carbon rules.
+          </div>
+        </div>
+        <div class="graphic-column">
+          <div class="screenshot-placeholder">
+            <div class="placeholder-icon">🧱</div>
+            <div class="placeholder-title">3D Structural Twin Graphic</div>
+            <p class="placeholder-caption">Paste screenshot of the interactive 3D Structural Twin showing building elements colored by carbon intensity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: STEP 1 - SITE INGESTION & AI PHOTO OCR -->
+    <div class="slide" data-slide="4">
+      <div class="slide-header">
+        <h2 class="slide-title">3. Step 1: Effortless Site Ingestion</h2>
+        <span class="slide-tag">Workflow</span>
+      </div>
+      <div class="slide-content-grid">
+        <div class="text-column">
+          <p class="lead-text">Site teams can record progress without complex setup or manual data entry burden.</p>
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Structured Excel Import:</strong> Drag-and-drop existing site spreadsheets or workbooks in one click.</li>
+            <li class="bullet-item"><strong>Site Ticket Photo OCR:</strong> Snap a photo of a physical delivery challan or invoice. AI extracts confirmed quantities.</li>
+            <li class="bullet-item"><strong>Audit Integrity:</strong> Ambiguous or non-material items are flagged and omitted to prevent distorted audits.</li>
+          </ul>
+          <div class="key-callout">
+            Zero friction: Converts paperwork straight into carbon ledger entries.
+          </div>
+        </div>
+        <div class="graphic-column">
+          <div class="screenshot-placeholder">
+            <div class="placeholder-icon">📷</div>
+            <div class="placeholder-title">Challan Photo OCR Screen</div>
+            <p class="placeholder-caption">Paste screenshot of the Site Challan / Receipt Photo OCR dropzone and detected materials table.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: STEP 2 - PROGRESS LOGS & S-CURVE -->
+    <div class="slide" data-slide="5">
+      <div class="slide-header">
+        <h2 class="slide-title">4. Step 2: Milestone Logs & S-Curve</h2>
+        <span class="slide-tag">Workflow</span>
+      </div>
+      <div class="slide-content-grid">
+        <div class="text-column">
+          <p class="lead-text">Monitor project carbon evolution stage by stage against the planned budget baseline.</p>
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Milestone Ledger:</strong> Independent records for each pour (Foundation, Substructure, Superstructure).</li>
+            <li class="bullet-item"><strong>Interactive Status Control:</strong> Toggle stages between Completed, In Progress, and Scheduled in real time.</li>
+            <li class="bullet-item"><strong>Continuous S-Curve:</strong> Live comparison of planned budget vs. actual cumulative carbon and projected total.</li>
+          </ul>
+          <div class="key-callout">
+            Clear visibility: Scheduled milestones show '-' until work begins.
+          </div>
+        </div>
+        <div class="graphic-column">
+          <div class="screenshot-placeholder">
+            <div class="placeholder-icon">📈</div>
+            <div class="placeholder-title">S-Curve Timeline Chart</div>
+            <p class="placeholder-caption">Paste screenshot of the Cumulative Carbon Budget S-Curve chart and the Site Progress Logs table.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: STEP 3 - REAL-WORLD VALIDATION -->
+    <div class="slide" data-slide="6">
+      <div class="slide-header">
+        <h2 class="slide-title">5. Step 3: Real-World Validation & Benchmarks</h2>
+        <span class="slide-tag">Results</span>
+      </div>
+      <div class="slide-content-grid">
+        <div class="text-column">
+          <p class="lead-text">Tested and proven on real construction data from the Mahindra Eden Whole Life Carbon Study.</p>
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Real Project Scale:</strong> 55,480 m³ of M30 concrete and 5,125 tonnes of steel rebar accurately tracked.</li>
+            <li class="bullet-item"><strong>Industry Benchmarking:</strong> Instant rating against CPWD standards, GRIHA Green targets, and ICE benchmarks.</li>
+            <li class="bullet-item"><strong>Hotspot Analysis:</strong> Pinpoints cement and steel as primary targets for low-carbon mix substitution.</li>
+          </ul>
+          <div class="key-callout">
+            Outcome: Proven accuracy on real-world Indian high-rise construction.
+          </div>
+        </div>
+        <div class="graphic-column">
+          <div class="screenshot-placeholder">
+            <div class="placeholder-icon">🏆</div>
+            <div class="placeholder-title">Benchmark & Pareto Hotspot Chart</div>
+            <p class="placeholder-caption">Paste screenshot of the Concrete Benchmark Evaluation card and the Pareto Hotspot chart.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation Controls -->
+  <div class="controls-bar">
+    <button id="btnPrev" class="btn-nav" onclick="prevSlide()">← Previous</button>
+    <span class="slide-counter" id="slideIndicator">Slide 1 of 6</span>
+    <button id="btnNext" class="btn-nav" onclick="nextSlide()">Next →</button>
+    <button class="btn-nav" style="background:#2563eb;" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 6;
+
+    function updateSlide() {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const active = document.querySelector(`.slide[data-slide="${currentSlide}"]`);
+      if (active) active.classList.add('active');
+
+      document.getElementById('slideIndicator').textContent = `Slide ${currentSlide} of ${totalSlides}`;
+      document.getElementById('btnPrev').disabled = (currentSlide === 1);
+      document.getElementById('btnNext').disabled = (currentSlide === totalSlides);
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
