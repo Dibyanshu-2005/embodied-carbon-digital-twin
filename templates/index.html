@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Twin: Embodied Carbon Monitoring in Construction | PM Control Center</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-title">
+        <h1>Digital Twin: Embodied Carbon Monitoring</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btnOpenBaselineModal" class="btn btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600;" title="Set project design baseline and carbon budget ceiling">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        Project Baseline & Targets
+      </button>
+      <a href="/api/export/excel" class="btn btn-outline" title="Export complete calculation workbook">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+        Export Excel (.xlsx)
+      </a>
+      <a href="/api/templates/download" class="btn btn-outline" title="Download empty spreadsheet template for your site data">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Download Template
+      </a>
+      <button id="btnResetDemo" class="btn btn-outline" title="Reset to default demo data">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        Reset Demo
+      </button>
+    </div>
+  </header>
+
+  <!-- Status Bar & 3 Main Navigation Tabs -->
+  <div class="status-bar">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span style="font-weight:600; color:#1e293b; font-size:13px;" id="statusProjectName">Commercial Complex Construction Package</span>
+      <span style="color:#64748b; font-size:12px;" id="statusBaselineMeta">Grade: M30 | Volume: 420 m³ | Budget: 115.0 tCO2e</span>
+    </div>
+
+    <!-- 3 Main Tabs: Dashboard, Site Logs, Emission Factor Library -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-target="tab-dashboard">
+        Project Dashboard
+      </button>
+      <button class="tab-btn" data-target="tab-data">
+        Site Progress Logs
+      </button>
+      <button class="tab-btn" data-target="tab-library">
+        Emission Factor Library
+      </button>
+    </nav>
+  </div>
+
+  <!-- Key Performance Indicator Cards (KPIs) -->
+  <section class="kpi-container" style="grid-template-columns: repeat(4, 1fr);">
+    <!-- KPI 1: Total Upfront Carbon -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Total Cumulative Carbon</span>
+        <span class="kpi-badge badge-blue">A1–A5 Scope</span>
+      </div>
+      <div class="kpi-value"><span id="kpiTotalCarbon">--</span> <span class="kpi-unit">tCO2e</span></div>
+      <div class="kpi-subtext" id="kpiTotalKg">-- kgCO2e cumulative</div>
+    </div>
+
+    <!-- KPI 2: Carbon Budget Health -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Carbon Budget Status</span>
+        <span id="kpiBudgetBadge" class="kpi-badge badge-amber">--</span>
+      </div>
+      <div class="kpi-value" style="font-size:18px;" id="kpiBudgetStatus">Checking...</div>
+      <div class="kpi-subtext">Vs Target Carbon Ceiling</div>
+    </div>
+
+    <!-- KPI 3: Construction Progress -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Physical Progress</span>
+        <span class="kpi-badge badge-green">On Schedule</span>
+      </div>
+      <div class="kpi-value" id="kpiProgress">--%</div>
+      <div class="kpi-subtext" id="kpiVolumePlaced">-- m³ placed</div>
+    </div>
+
+    <!-- KPI 4: Site Wastage & Loss -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Wastage Carbon Loss</span>
+        <span class="kpi-badge badge-red">Site Inefficiency</span>
+      </div>
+      <div class="kpi-value"><span id="kpiWastePenalty">--</span> <span class="kpi-unit">tCO2e</span></div>
+      <div class="kpi-subtext" id="kpiWastePct">--% embedded loss</div>
+    </div>
+  </section>
+
+  <!-- Main Views Container -->
+  <main>
+    <!-- ========================================== -->
+    <!-- TAB 1: PROJECT MANAGER DASHBOARD (ACTION CENTER) -->
+    <!-- ========================================== -->
+    <div id="tab-dashboard" class="tab-pane active">
+      
+      <!-- Row 1: Visual Analytics (S-Curve & Hotspots) -->
+      <div class="grid-7-5">
+        <!-- Left: Cumulative Historical S-Curve -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+              Project Carbon S-Curve (Planned Baseline vs Actual Logged vs Projected)
+            </span>
+            <span class="kpi-badge badge-blue">Continuous Baseline</span>
+          </div>
+          <div class="card-body">
+            <!-- S-Curve chart -->
+            <div style="height:360px;">
+              <canvas id="chartCumulative"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Carbon Hotspots & Variance Analytics -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- Hotspots & Variance Card with Sub-Tab Toggles -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Carbon Drivers & BOQ Variance
+              </span>
+              <!-- Sub-view toggle buttons -->
+              <div class="chart-toggle-group">
+                <button class="btn btn-sm btn-sub active" id="btnShowHotspots">Pareto Hotspots</button>
+                <button class="btn btn-sm btn-sub" id="btnShowVariance">Planned vs Actual</button>
+                <button class="btn btn-sm btn-sub" id="btnShowStages">A1–A5 Stages</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding:16px;">
+              <!-- View A: Pareto Hotspots -->
+              <div id="viewHotspots" style="height:220px;">
+                <canvas id="chartHotspots"></canvas>
+              </div>
+              <!-- View B: Planned vs Actual Variance -->
+              <div id="viewVariance" style="height:220px; display:none;">
+                <canvas id="chartPlannedVsActual"></canvas>
+              </div>
+              <!-- View C: A1-A5 Stage Breakdown -->
+              <div id="viewStages" style="height:220px; display:none;">
+                <canvas id="chartStageBreakdown"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity Performance & Burn Rate Card -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                Project Burn Rate & Target Health
+              </span>
+              <span class="kpi-badge badge-green">Dynamic Tracking</span>
+            </div>
+            <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+              <div style="background:#f8fafc; padding:10px 12px; border-radius:6px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span style="color:#64748b;">Volume Placed vs Total:</span>
+                  <strong id="summaryVolPlaced">-- / -- m³</strong>
+                </div>
+                <div style="width:100%; height:7px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                  <div id="summaryVolBar" style="height:100%; width:0%; background:#2563eb; transition:width 0.3s ease;"></div>
+                </div>
+              </div>
+
+              <div style="background:#f8fafc; padding:10px 12px; border-radius:6px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span style="color:#64748b;">Carbon Budget Consumed:</span>
+                  <strong id="summaryCarbonBurn">-- / -- tCO2e</strong>
+                </div>
+                <div style="width:100%; height:7px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                  <div id="summaryCarbonBar" style="height:100%; width:0%; background:#f59e0b; transition:width 0.3s ease;"></div>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="background:#f1f5f9; padding:8px 10px; border-radius:6px; text-align:center;">
+                  <div style="font-size:11px; color:#64748b;">Avg Concrete Intensity</div>
+                  <div style="font-size:15px; font-weight:700; color:#1e293b;" id="summaryAvgIntensity">-- kg/m³</div>
+                </div>
+                <div style="background:#f1f5f9; padding:8px 10px; border-radius:6px; text-align:center;">
+                  <div style="font-size:11px; color:#64748b;">Projected Completion</div>
+                  <div style="font-size:15px; font-weight:700; color:#1e293b;" id="summaryProjectedTotal">-- tCO2e</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SITE INGESTION & PERIODIC LOGS -->
+    <!-- ========================================== -->
+    <div id="tab-data" class="tab-pane">
+      
+      <!-- SUB-VIEW 1: PERIODIC LOGS MASTER LIST VIEW -->
+      <div id="viewSiteIngestionList">
+        <!-- Master Header Card -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div>
+              <span class="card-title" style="font-size:16px;">Site Progress Logs</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="btnOpenNewEntryModal" class="btn btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600; border:none; padding:8px 18px; border-radius:6px; cursor:pointer;">
+                New Entry
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Log ID</th>
+                    <th>Milestone / Stage Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actual Carbon</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="stagesTableBody">
+                  <!-- Dynamically filled with view details button on each row -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Row: Bulk File Upload -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+              Bulk Excel / CSV File Import
+            </span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Drag and drop an existing site log workbook (.xlsx, .csv) to import all sheets at once.</p>
+            <div class="dropzone" id="uploadDropzone" style="padding:20px 14px;">
+              <div class="dropzone-icon" style="font-size:28px;">📁</div>
+              <div style="font-size:13px; font-weight:600; color:#1e293b;">Click or drag file here</div>
+              <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Site Challan / Receipt Photo OCR -->
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              Site Challan / Receipt Photo OCR
+            </span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Upload site delivery tickets or challan photos. AI extracts confirmed materials into your log and omits ambiguous data.</p>
+            
+            <div class="dropzone" id="photoDropzone" style="padding:20px 14px;">
+              <div class="dropzone-icon" style="font-size:28px;">📷</div>
+              <div style="font-size:13px; font-weight:600; color:#1e293b;">Click or drag challan photos here</div>
+              <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;">
+            </div>
+
+            <!-- OCR Loading State -->
+            <div id="ocrLoading" style="display:none; text-align:center; padding:16px; color:#475569; font-size:13px;">
+              <div class="spinner" style="margin:0 auto 8px auto; width:22px; height:22px; border:2px solid #e2e8f0; border-top-color:#2563eb; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+              Analyzing challan photos with AI OCR...
+            </div>
+
+            <!-- OCR Results Area -->
+            <div id="ocrResultsContainer" style="display:none; margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                <span style="font-size:13px; font-weight:700; color:#0f172a;" id="ocrResultsTitle">Detected Materials (0)</span>
+                <div style="display:flex; gap:8px;">
+                  <button id="btnDownloadOcrCsv" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 10px; border:1px solid #cbd5e1; background:#fff; color:#1e293b; border-radius:4px; cursor:pointer;">
+                    Download Partial CSV
+                  </button>
+                  <button id="btnAddOcrToStage" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; background:#2563eb; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">
+                    Add to Active Log
+                  </button>
+                </div>
+              </div>
+
+              <!-- Verified Items Table -->
+              <div class="table-responsive" style="margin-bottom:12px;">
+                <table class="data-table" style="font-size:12px;">
+                  <thead>
+                    <tr>
+                      <th>Material</th>
+                      <th>Category</th>
+                      <th>Quantity</th>
+                      <th>Unit</th>
+                      <th>EF (kgCO2e/unit)</th>
+                      <th>Est. Carbon (tCO2e)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ocrVerifiedTableBody">
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Omitted / Ambiguous items notification -->
+              <div id="ocrOmittedNotice" style="display:none; padding:8px 12px; background:#fef2f2; border:1px solid #fee2e2; border-radius:6px; font-size:11px; color:#991b1b;">
+                <div style="font-weight:600; margin-bottom:2px;">Ambiguous or non-material lines omitted for audit integrity:</div>
+                <ul id="ocrOmittedList" style="margin:0; padding-left:16px;"></ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW 2: SELECTED LOG DETAILS VIEW (MATERIALS, TRANSPORT, EQUIPMENT) -->
+      <div id="viewSiteIngestionDetail" style="display:none;">
+        <!-- Navigation Header -->
+        <div class="card" style="margin-bottom:20px; background:#f8fafc; border:1px solid #cbd5e1;">
+          <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 18px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <button id="btnBackToLogList" class="btn btn-outline" style="background:#ffffff; color:#1e293b; font-weight:600; padding:6px 12px;">
+                ← Back to All Logs
+              </button>
+              <div>
+                <h2 id="activeLogTitle" style="font-size:16px; font-weight:700; color:#0f172a;">Site Log Details</h2>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:3px; flex-wrap:wrap;">
+                  <span id="activeLogMeta" style="font-size:12px; color:#64748b;">Date: 2025-01-20 | Log ID: #1</span>
+                  <div style="display:inline-flex; align-items:center; gap:5px;">
+                    <span style="font-size:12px; color:#475569; font-weight:600;">Status:</span>
+                    <select id="activeLogStatusSelect" style="font-size:12px; font-weight:600; padding:2px 8px; border-radius:4px; border:1px solid #cbd5e1; background:#fff; cursor:pointer;">
+                      <option value="Completed">Completed</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Scheduled">Scheduled</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="btnSaveDetailAndBack" class="btn btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600; padding:7px 16px; border:none; border-radius:6px;">
+                Save & Return to Logs
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log 1: Materials Consumption & Wastage Table -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <span class="card-title">1. Materials Consumption & Wastage Log (A1–A3)</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; color:#64748b;">Double-click cells to edit quantities inline</span>
+              <button id="btnOpenAddMaterialModal" class="btn btn-sm btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600; border:none;">
+                Add Material
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th>Planned Qty (BOQ)</th>
+                    <th>Consumed Qty</th>
+                    <th>EF (kgCO2e/unit)</th>
+                    <th>Waste %</th>
+                    <th>Carbon (tCO2e)</th>
+                    <th>Share %</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="materialsTableBody">
+                  <!-- Dynamically filled with subtle delete icon next to item name -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log 2: Material Haulage & Transport Table -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <span class="card-title">2. Material Haulage & Transportation Log (A4)</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; color:#64748b;">Distance & vehicle emission factor live updates</span>
+              <button id="btnOpenAddTransportModal" class="btn btn-sm btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600; border:none;">
+                Add Transport Leg
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Material Delivery</th>
+                    <th>Vehicle Type</th>
+                    <th>Mass (tonnes)</th>
+                    <th>Haulage Distance</th>
+                    <th>Effective Distance</th>
+                    <th>Transport EF</th>
+                    <th>Carbon (tCO2e)</th>
+                    <th>Share %</th>
+                  </tr>
+                </thead>
+                <tbody id="transportTableBody">
+                  <!-- Dynamically filled -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log 3: Construction Plant & Site Equipment Table -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <span class="card-title">3. Construction Plant & Site Equipment Log (A5a)</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; color:#64748b;">Pumps, batching plant, transit mixers, generators</span>
+              <button id="btnOpenAddEquipmentModal" class="btn btn-sm btn-primary" style="background:#2563eb; color:#ffffff; font-weight:600; border:none;">
+                Add Equipment
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Equipment Plant</th>
+                    <th>Fuel / Power</th>
+                    <th>Operating Hours</th>
+                    <th>Energy Consumed</th>
+                    <th>Emission Factor</th>
+                    <th>Carbon (tCO2e)</th>
+                    <th>Share %</th>
+                  </tr>
+                </thead>
+                <tbody id="equipmentTableBody">
+                  <!-- Dynamically filled -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Callout to Central Emission Factor Reference Library -->
+        <div style="margin-top:20px; padding:16px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong style="color:#0f172a; font-size:14px;">Standard Construction Emission Factor Reference Library</strong>
+            <p style="font-size:12px; color:#64748b; margin:2px 0 0 0;">Inspect verified cradle-to-gate (A1–A3), haulage (A4), and equipment (A5a) emission factors sourced from CPWD, Indian EPDs, ICE, CEA, and MoRTH.</p>
+          </div>
+          <button id="btnGoToLibraryTab" class="btn btn-outline" style="border-color:#2563eb; color:#2563eb; font-weight:600; padding:8px 16px; background:#ffffff;">
+            View Emission Factor Library &rarr;
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: EMISSION FACTOR LIBRARY -->
+    <!-- ========================================== -->
+    <div id="tab-library" class="tab-pane">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <span class="card-title" style="font-size:16px; font-weight:700;">Central Construction Emission Factor Library</span>
+            <p style="font-size:12px; color:#64748b; margin-top:2px;">Verified cradle-to-gate (A1–A3), haulage (A4), and equipment (A5a) emission factors sourced from CPWD, Indian EPDs, ICE, CEA, and MoRTH.</p>
+          </div>
+          <div>
+            <input type="text" id="catalogSearchInput" placeholder="Filter materials & factors..." style="padding:7px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; width:260px;">
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-responsive">
+            <table class="data-table" style="font-size:12px;">
+              <thead>
+                <tr>
+                  <th>Item / Material Name</th>
+                  <th>Category / Scope</th>
+                  <th>Emission Factor</th>
+                  <th>Unit</th>
+                  <th>Reference Standard</th>
+                </tr>
+              </thead>
+              <tbody id="catalogTableBody">
+                <!-- Dynamically populated from /api/emission-factors -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Sources Cited List at the bottom -->
+        <div style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:18px 24px;">
+          <h4 style="font-size:12px; font-weight:700; color:#334155; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">Sources Cited & Methodologies</h4>
+          <div id="catalogSourcesList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:12px; font-size:11px;">
+            <!-- Dynamically populated footnotes [1]–[6] -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS -->
+  <!-- ========================================== -->
+
+  <!-- Modal 0: Project Baseline & Targets Settings -->
+  <div class="modal-overlay" id="modalBaselineOverlay">
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 style="font-size:16px; font-weight:700;">Project Baseline & Carbon Budget Targets</h3>
+        <button class="btn btn-sm btn-outline" style="border:none; color:#64748b; font-size:18px;" onclick="closeModal('modalBaselineOverlay')">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:12px; color:#64748b;">Set your design baseline targets from the structural drawings and contract specifications. Actual logged emissions will be benchmarked against these figures.</p>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Project Name</label>
+          <input type="text" id="baselineProjectName" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" placeholder="Project Name">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Concrete Grade</label>
+            <input type="text" id="baselineConcreteGrade" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" placeholder="e.g. M30 Design Mix">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Total Planned Volume (m³)</label>
+            <input type="number" id="baselineVolumeInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" step="10">
+          </div>
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Carbon Budget Ceiling (tCO2e)</label>
+          <input type="number" id="baselineBudgetInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" step="1">
+          <div style="font-size:11px; color:#64748b; margin-top:3px;">Sets the baseline carbon ceiling curve and burn rate threshold for the project.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" style="color:#64748b; border-color:#cbd5e1;" onclick="closeModal('modalBaselineOverlay')">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveBaseline" style="background:#2563eb; color:#ffffff; font-weight:600; padding:8px 18px; border-radius:6px; border:none;">Save Baseline Targets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: New Site Progress Entry -->
+  <div class="modal-overlay" id="modalNewStageOverlay">
+    <div class="modal-content" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 style="font-size:16px; font-weight:700;">New Site Progress Entry</h3>
+        <button class="btn btn-sm btn-outline" style="border:none; color:#64748b; font-size:18px;" onclick="closeModal('modalNewStageOverlay')">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Milestone / Stage Name</label>
+          <input type="text" id="newStageName" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" placeholder="e.g. Third Floor Slab Pour">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Date</label>
+          <input type="date" id="newStageDate" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;">
+          <input type="hidden" id="newStageVolume" value="50.0">
+          <input type="hidden" id="newStageStatus" value="In Progress">
+        </div>
+
+        <div style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid #e2e8f0;">
+          <label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px; color:#1e293b;">Log Setup Mode:</label>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="radio" name="stageTemplateMode" id="modeCopyTemplate" value="copy" checked style="accent-color:#2563eb;">
+              <span style="font-weight:600; color:#1e293b;">Copy Previous Template</span>
+              <span style="color:#64748b; font-size:11px;">(Pre-fill previous items)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="radio" name="stageTemplateMode" id="modeFreshTemplate" value="fresh" style="accent-color:#2563eb;">
+              <span style="font-weight:600; color:#1e293b;">Start Fresh Entry</span>
+              <span style="color:#64748b; font-size:11px;">(Blank — add items manually)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" style="color:#64748b; border-color:#cbd5e1;" onclick="closeModal('modalNewStageOverlay')">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitNewStage" style="background:#2563eb; color:#ffffff; font-weight:600; border:none; padding:8px 18px; border-radius:6px;">Create & Open Details</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Add Material from Central Database -->
+  <div class="modal-overlay" id="modalAddMaterialOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size:15px; font-weight:700;">Add Material to Site Log</h3>
+        <button class="btn btn-sm btn-outline" style="border:none; color:#64748b; font-size:18px;" onclick="closeModal('modalAddMaterialOverlay')">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Category</label>
+            <select id="matSelectCategory" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;">
+              <option value="all">All Categories</option>
+              <option value="Cement">Cement</option>
+              <option value="SCM">SCM (Fly Ash, GGBS)</option>
+              <option value="Aggregates">Aggregates & Sand</option>
+              <option value="Steel">Reinforcement Steel</option>
+              <option value="Admixtures">Chemical Admixtures</option>
+              <option value="Water">Water</option>
+              <option value="Formwork">Formwork</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Material (Central Catalog)</label>
+            <select id="matSelectCatalog" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;">
+              <!-- Dynamically populated from /api/emission-factors -->
+            </select>
+          </div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; font-size:12px;">
+          <div>
+            <span style="color:#64748b;">Unit:</span><br>
+            <strong id="matUnitDisplay">kg</strong>
+          </div>
+          <div>
+            <span style="color:#64748b;">Emission Factor:</span><br>
+            <strong id="matEfDisplay" style="color:#2563eb;">0.890 kgCO2e/kg</strong>
+          </div>
+          <div>
+            <span style="color:#64748b;">Source Ref:</span><br>
+            <strong id="matSourceDisplay" class="source-pill">[1] CPWD 2019</strong>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Consumed Quantity (<span id="matUnitLabel">kg</span>)</label>
+            <input type="number" id="matConsumedInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="10000" step="100">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Wastage Allowance (%)</label>
+            <input type="number" id="matWasteInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="3.0" step="0.5">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" style="color:#64748b; border-color:#cbd5e1;" onclick="closeModal('modalAddMaterialOverlay')">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitAddMaterial">Add to Materials Log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Add Transport from Central Database -->
+  <div class="modal-overlay" id="modalAddTransportOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size:15px; font-weight:700;">Add Haulage Transport Record</h3>
+        <button class="btn btn-sm btn-outline" style="border:none; color:#64748b; font-size:18px;" onclick="closeModal('modalAddTransportOverlay')">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Material Description / Consignment</label>
+          <input type="text" id="trMaterialInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" placeholder="e.g. Bulk Cement Consignment">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Vehicle Mode (Central Catalog)</label>
+          <select id="trVehicleSelect" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Mass Transported (tonnes)</label>
+            <input type="number" id="trMassInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="25.0" step="1">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Haulage Distance (km)</label>
+            <input type="number" id="trDistanceInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="80.0" step="5">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" style="color:#64748b; border-color:#cbd5e1;" onclick="closeModal('modalAddTransportOverlay')">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitAddTransport">Add to Transport Log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Add Equipment from Central Database -->
+  <div class="modal-overlay" id="modalAddEquipmentOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="font-size:15px; font-weight:700;">Add Construction Plant / Equipment Record</h3>
+        <button class="btn btn-sm btn-outline" style="border:none; color:#64748b; font-size:18px;" onclick="closeModal('modalAddEquipmentOverlay')">&times;</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Equipment Plant (Central Catalog)</label>
+          <select id="eqSelectCatalog" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Operating Hours</label>
+            <input type="number" id="eqHoursInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="50.0" step="1">
+          </div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">Fuel / Energy Consumed (<span id="eqUnitLabel">L</span>)</label>
+            <input type="number" id="eqFuelInput" style="width:100%; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:13px;" value="400.0" step="10">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" style="color:#64748b; border-color:#cbd5e1;" onclick="closeModal('modalAddEquipmentOverlay')">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitAddEquipment">Add to Equipment Log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Application Scripts -->
+  <script src="/static/js/dashboard_charts.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

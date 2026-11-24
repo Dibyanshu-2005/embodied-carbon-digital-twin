@@ -1,0 +1,10 @@
+material_name,category,unit,planned_quantity,delivered_quantity,consumed_quantity,waste_percentage,waste_quantity,emission_factor,ef_source
+OPC 53 Grade Cement,Cement,kg,125000.0,134000.0,130000.0,3.2,4160.0,0.89,Indian Cement EPD / CPWD Baseline (Dry Process Rotary Kiln)
+Fly Ash (Class F Beneficiated),SCM,kg,28000.0,30000.0,29000.0,2.0,580.0,0.015,ICE Database v3.0 (Economic Allocation for Beneficiation & Transport)
+Coarse Aggregate 20mm (Crushed Basalt),Aggregates,kg,275000.0,290000.0,282000.0,4.1,11562.0,0.007,ICE Database v3.0 (Crushed rock aggregate including quarrying)
+Coarse Aggregate 10mm (Crushed Basalt),Aggregates,kg,138000.0,145000.0,141000.0,3.8,5358.0,0.007,ICE Database v3.0 (Crushed rock aggregate including quarrying)
+Fine Aggregate (Manufactured M-Sand),Aggregates,kg,235000.0,250000.0,242000.0,4.5,10890.0,0.008,Indian LCI for VSI Crusher M-Sand
+TMT Rebar Fe 500D (Primary Steel),Reinforcement,kg,36000.0,40000.0,38500.0,6.2,2387.0,2.25,Indian Steel Sector LCI (BF-BOF route EPD average)
+Chemical Admixture (PCE Superplasticizer),Admixtures,kg,2600.0,2800.0,2750.0,1.5,41.25,1.45,EFCA Environmental Product Declaration
+Mixing Water (Municipal Potable),Water,kg,66000.0,66000.0,65000.0,1.0,650.0,0.0003,UK DEFRA / Indian Municipal Pumping Baseline
+Shuttering Formwork Plywood (12mm),Formwork,m2,3200.0,3300.0,3250.0,5.0,162.5,0.08,ICE Database v3.0 (Timber shuttering amortized over 15 pours)

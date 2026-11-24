@@ -1,0 +1,28 @@
+# Environment variables & secrets (DO NOT COMMIT)
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Test & cache artifacts
+.pytest_cache/
+*.log

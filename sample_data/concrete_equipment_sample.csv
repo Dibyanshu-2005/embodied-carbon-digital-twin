@@ -1,0 +1,6 @@
+equipment_name,category,fuel_type,hours_operated,fuel_consumption_rate,fuel_consumed,emission_factor,notes
+Concrete Boom Placer & Stationary Pump,Pumping Equipment,Diesel,125.0,16.5,2062.5,2.68,Pumping M30 mix to foundation and elevated slabs
+Transit Mixer On-Site Discharging & Idling,Transport / Agitation,Diesel,95.0,4.8,456.0,2.68,On-site turnaround and drum spinning
+High-Frequency Concrete Needle Vibrators (x3),Compaction Equipment,Diesel,140.0,0.9,126.0,2.68,Internal concrete compaction
+Site Diesel Generator Set (125 kVA),Power Generation,Diesel,150.0,13.5,2025.0,2.68,"Site power for curing pumps, lights, and batch plant"
+Batching Plant Grid Electricity,Batching Plant,Electric (Grid),110.0,20.0,2200.0,0.716,Pan mixer electric motor & aggregate conveyor
